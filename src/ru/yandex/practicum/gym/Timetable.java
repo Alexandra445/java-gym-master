@@ -29,18 +29,8 @@ public class Timetable {
         daySchedule.get(time).add(trainingSession);
     }
 
-    public List<TrainingSession> getTrainingSessionsForDay(DayOfWeek dayOfWeek) {
-        TreeMap<TimeOfDay, List<TrainingSession>> daySessions = timetable.get(dayOfWeek);
-
-        if (daySessions == null) {
-            return Collections.emptyList();
-        }
-
-        List<TrainingSession> result = new ArrayList<>();
-        for (List<TrainingSession> list : daySessions.values()) {
-            result.addAll(list);
-        }
-        return result;
+    public TreeMap<TimeOfDay, List<TrainingSession>> getTrainingSessionsForDay(DayOfWeek dayOfWeek) {
+        return timetable.getOrDefault(dayOfWeek, new TreeMap<>(timeComparator));
     }
 
     public List<TrainingSession> getTrainingSessionsForDayAndTime(DayOfWeek dayOfWeek, TimeOfDay timeOfDay) {
@@ -70,7 +60,6 @@ public class Timetable {
             result.add(new CounterOfTrainings(entry.getKey(), entry.getValue()));
         }
 
-        // Сортируем по убыванию (от большего количества тренировок к меньшему)
         result.sort((c1, c2) -> Integer.compare(c2.getCount(), c1.getCount()));
 
         return result;
