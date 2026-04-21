@@ -2,7 +2,6 @@ package ru.yandex.practicum.gym;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
 import java.util.*;
 
 public class TimetableTest {
@@ -18,14 +17,18 @@ public class TimetableTest {
 
         timetable.addNewTrainingSession(singleTrainingSession);
 
-        //Проверить, что за понедельник вернулось одно занятие
-        //Проверить, что за вторник не вернулось занятий
+        // Проверить, что за понедельник вернулось одно занятие
+        TreeMap<TimeOfDay, List<TrainingSession>> mondaySessions = timetable.getTrainingSessionsForDay(DayOfWeek.MONDAY);
+        Assertions.assertEquals(1, mondaySessions.size());
+
+        // Проверить, что за вторник не вернулось занятий
+        TreeMap<TimeOfDay, List<TrainingSession>>  tuesdaySessions = timetable.getTrainingSessionsForDay(DayOfWeek.TUESDAY);
+        Assertions.assertTrue(tuesdaySessions.isEmpty());
     }
 
     @Test
     void testGetTrainingSessionsForDayMultipleSessions() {
         Timetable timetable = new Timetable();
-
         Coach coach = new Coach("Васильев", "Николай", "Сергеевич");
 
         Group groupAdult = new Group("Акробатика для взрослых", Age.ADULT, 90);
@@ -47,8 +50,21 @@ public class TimetableTest {
         timetable.addNewTrainingSession(saturdayChildTrainingSession);
 
         // Проверить, что за понедельник вернулось одно занятие
-        // Проверить, что за четверг вернулось два занятия в правильном порядке: сначала в 13:00, потом в 20:00
+        TreeMap<TimeOfDay, List<TrainingSession>> mondaySessions = timetable.getTrainingSessionsForDay(DayOfWeek.MONDAY);
+        Assertions.assertEquals(1, mondaySessions.size());
+
+        // Проверить, что за четверг вернулось два занятия в правильном порядке
+        TreeMap<TimeOfDay, List<TrainingSession>> thursdaySessions = timetable.getTrainingSessionsForDay(DayOfWeek.THURSDAY);
+        Assertions.assertEquals(2, thursdaySessions.size());
+        List<TimeOfDay> times = new ArrayList<>(thursdaySessions.keySet());
+        // Сначала 13:00
+        Assertions.assertEquals(13, times.get(0).getHours());
+        // Потом 20:00
+        Assertions.assertEquals(20, times.get(1).getHours());
+
         // Проверить, что за вторник не вернулось занятий
+        TreeMap<TimeOfDay, List<TrainingSession>> tuesdaySessions = timetable.getTrainingSessionsForDay(DayOfWeek.TUESDAY);
+        Assertions.assertTrue(tuesdaySessions.isEmpty());
     }
 
     @Test
@@ -62,8 +78,31 @@ public class TimetableTest {
 
         timetable.addNewTrainingSession(singleTrainingSession);
 
-        //Проверить, что за понедельник в 13:00 вернулось одно занятие
-        //Проверить, что за понедельник в 14:00 не вернулось занятий
+        // Проверить, что за понедельник в 13:00 вернулось одно занятие
+        List<TrainingSession> result = timetable.getTrainingSessionsForDayAndTime(DayOfWeek.MONDAY, new TimeOfDay(13, 0));
+        Assertions.assertEquals(1, result.size());
+
+        // Проверить, что за понедельник в 14:00 не вернулось занятий
+        List<TrainingSession> emptyResult = timetable.getTrainingSessionsForDayAndTime(DayOfWeek.MONDAY, new TimeOfDay(14, 0));
+        Assertions.assertTrue(emptyResult.isEmpty());
     }
 
+    @Test
+    void testGetCountByCoaches() {
+        Timetable timetable = new Timetable();
+        Coach coach1 = new Coach("Иванов", "Иван", "Иванович");
+        Coach coach2 = new Coach("Петров", "Петр", "Петрович");
+        Group group = new Group("Бокс", Age.ADULT, 60);
+
+        timetable.addNewTrainingSession(new TrainingSession(group, coach1, DayOfWeek.MONDAY, new TimeOfDay(10, 0)));
+        timetable.addNewTrainingSession(new TrainingSession(group, coach1, DayOfWeek.WEDNESDAY, new TimeOfDay(10, 0)));
+
+        timetable.addNewTrainingSession(new TrainingSession(group, coach2, DayOfWeek.FRIDAY, new TimeOfDay(12, 0)));
+
+        List<CounterOfTrainings> stats = timetable.getCountByCoaches();
+
+        Assertions.assertEquals(2, stats.size());
+        Assertions.assertEquals("Иванов", stats.get(0).getCoach().getSurname());
+        Assertions.assertEquals(2, stats.get(0).getCount());
+    }
 }
